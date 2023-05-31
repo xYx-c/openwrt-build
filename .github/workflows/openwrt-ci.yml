@@ -94,9 +94,6 @@ jobs:
         run: |
           make -j$(nproc) || make -j1 V=s
           make -j$(nproc) V=s
-          grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
-          [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
-          echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
       - name : Upload artifact
         uses: actions/upload-artifact@master
@@ -104,41 +101,41 @@ jobs:
           name: OpenWrt
           path: openwrt/bin
 
-      - name: Organize files
-        id: organize
-        run: |
-          cd openwrt/bin/targets/*/*
-          rm -rf packages
-          echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-          echo "status=success" >> $GITHUB_OUTPUT
-      - name: Upload firmware directory
-        uses: actions/upload-artifact@main
-        if: steps.organize.outputs.status == 'success'
-        with:
-          name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-          path: ${{ env.FIRMWARE }}
-          
-      - name: Generate release tag
-        id: tag
-        if: env.UPLOAD_RELEASE == 'true'
-        run: |
-          echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
-          echo "status=success" >> $GITHUB_OUTPUT
-       #uses: softprops/action-gh-release@v1
-      - name: Upload firmware to release
-        uses: softprops/action-gh-release@v0.1.15
-        if: steps.tag.outputs.status == 'success'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.tag.outputs.release_tag }}
-          files: ${{ env.FIRMWARE }}/*
-
-      - name: Remove old Releases
-        uses: dev-drprasad/delete-older-releases@v0.2.1
-        if: env.UPLOAD_RELEASE == 'true'
-        with:
-          keep_latest: 5
-          delete_tags: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Organize files
+      #   id: organize
+      #   run: |
+      #     cd openwrt/bin/targets/*/*
+      #     rm -rf packages
+      #     echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+      #     echo "status=success" >> $GITHUB_OUTPUT
+      # - name: Upload firmware directory
+      #   uses: actions/upload-artifact@main
+      #   if: steps.organize.outputs.status == 'success'
+      #   with:
+      #     name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+      #     path: ${{ env.FIRMWARE }}
+      #     
+      # - name: Generate release tag
+      #   id: tag
+      #   if: env.UPLOAD_RELEASE == 'true'
+      #   run: |
+      #     echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+      #     echo "status=success" >> $GITHUB_OUTPUT
+      #  #uses: softprops/action-gh-release@v1
+      # - name: Upload firmware to release
+      #   uses: softprops/action-gh-release@v0.1.15
+      #   if: steps.tag.outputs.status == 'success'
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ steps.tag.outputs.release_tag }}
+      #     files: ${{ env.FIRMWARE }}/*
+      #
+      # - name: Remove old Releases
+      #   uses: dev-drprasad/delete-older-releases@v0.2.1
+      #   if: env.UPLOAD_RELEASE == 'true'
+      #   with:
+      #     keep_latest: 5
+      #     delete_tags: true
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
